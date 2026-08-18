@@ -44,7 +44,7 @@ The easiest way to run the server is as a Home Assistant add-on.
 
 1. **Add Repository**:
    - Go to **Settings** → **Add-ons** → **Add-on Store** → **⋮** (three dots) → **Repositories**
-   - Add: `https://github.com/aitjcize/esp32-photoframe-server`
+   - Add: `https://github.com/arxenix/esp32-photoframe-server`
 
 2. **Install Add-on**:
    - Find "ESP32 PhotoFrame Server" in the add-on store
