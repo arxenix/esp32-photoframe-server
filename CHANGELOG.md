@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.16.0
+
+### Added
+
+- **Google Photos Ambient source.** Each frame can be paired as its own
+  device in a Google Photos account via the device-code flow (scan the QR
+  or type the code), after which the photos it shows are chosen from the
+  Google Photos app. Setup lives under Settings → Google Ambient and needs
+  its own OAuth client of type "TVs and Limited Input devices"; see the
+  README.
+
+### Changed
+
+- **The add-on is built from this repository.** The manifest no longer
+  points at a prebuilt Docker Hub image, so Home Assistant builds the
+  add-on from the repo's Dockerfile on install and update. The first build
+  takes a while on a Raspberry Pi.
+
 ## v1.15.0
 
 ### Added
