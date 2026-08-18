@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.16.1
+
+### Fixed
+
+- **Add-on build failure.** `AmbientService` was missing the `LastSyncError`
+  method that `PhotoSyncBackend` gained in v1.15.0, so the Go build failed
+  once the ambient source landed on top of it and Home Assistant could not
+  build the add-on.
+
 ## v1.16.0
 
 ### Added

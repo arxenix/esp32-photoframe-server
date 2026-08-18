@@ -915,6 +915,9 @@ func (s *AmbientService) ClearAndResync() error {
 // IsSyncing reports whether an ambient sync is in flight.
 func (s *AmbientService) IsSyncing() bool { return s.autoSync.IsRunning() }
 
+// LastSyncError reports the most recent sync run's failure ("" on success).
+func (s *AmbientService) LastSyncError() string { return s.autoSync.LastError() }
+
 // ClearPhotos deletes all locally cached ambient photos.
 func (s *AmbientService) ClearPhotos() error {
 	if err := clearSourcePhotos(s.db, model.SourceGoogleAmbient); err != nil {
