@@ -140,6 +140,7 @@ func TestForeignKeyCascades(t *testing.T) {
 	exec("INSERT INTO device_album_mappings(device_id, album_id) VALUES (1, 100)")
 	exec("INSERT INTO device_url_mappings(device_id, url_source_id) VALUES (1, 500)")
 	exec("INSERT INTO generative_states(device_id, source) VALUES (1, 'fractal')")
+	exec("INSERT INTO ambient_devices(device_id) VALUES (1)")
 	exec("INSERT INTO device_histories(device_id, image_id, served_at) VALUES (1, 10, '2026-01-01')")
 
 	// Deleting the image cascades its membership and NULLs (not deletes) the
@@ -174,5 +175,8 @@ func TestForeignKeyCascades(t *testing.T) {
 	}
 	if got := count("SELECT COUNT(*) FROM device_histories"); got != 0 {
 		t.Errorf("device_history survived device delete: got %d, want 0", got)
+	}
+	if got := count("SELECT COUNT(*) FROM ambient_devices"); got != 0 {
+		t.Errorf("ambient_device survived device delete: got %d, want 0", got)
 	}
 }

@@ -380,7 +380,7 @@ func (h *GalleryHandler) DeletePhoto(c echo.Context) error {
 
 	// For local sources (gallery / google), drop the original file too.
 	// Synology / Immich keep the original on the source, so nothing on disk.
-	if item.Source == model.SourceGooglePhotos || item.Source == model.SourceGallery {
+	if isLocalFileSource(item.Source) {
 		if item.FilePath != "" {
 			os.Remove(item.FilePath)
 		}
@@ -390,6 +390,17 @@ func (h *GalleryHandler) DeletePhoto(c echo.Context) error {
 	os.Remove(filepath.Join(h.dataDir, "thumbnails", fmt.Sprintf("%d.jpg", item.ID)))
 
 	return c.JSON(http.StatusOK, map[string]string{"status": "deleted"})
+}
+
+// isLocalFileSource reports whether the source keeps its own copy of the image
+// bytes on disk, so deleting the row must delete the file too.
+func isLocalFileSource(source string) bool {
+	switch source {
+	case model.SourceGallery, model.SourceGooglePhotos, model.SourceGoogleAmbient:
+		return true
+	default:
+		return false
+	}
 }
 
 // DeletePhotos deletes all photos matching a source filter (or all if no filter)
@@ -428,7 +439,7 @@ func (h *GalleryHandler) DeletePhotos(c echo.Context) error {
 	}
 
 	for _, item := range items {
-		if item.Source == model.SourceGooglePhotos || item.Source == model.SourceGallery {
+		if isLocalFileSource(item.Source) {
 			if item.FilePath != "" {
 				os.Remove(item.FilePath)
 			}
