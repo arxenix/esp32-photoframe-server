@@ -168,6 +168,9 @@ func main() {
 	// Initialize Immich Service
 	immichService := service.NewImmichService(database, settingsService)
 	immichService.StartAutoSync()
+	// Initialize Google Photos Ambient Service (one ambient device per frame)
+	ambientService := service.NewAmbientService(database, settingsService, dataDir)
+	ambientService.StartAutoSync()
 	// Initialize search-topic sources (each user topic becomes a synced album).
 	unsplashService := service.NewUnsplashService(database, settingsService)
 	unsplashService.StartAutoSync()
@@ -186,6 +189,7 @@ func main() {
 	sourceRegistry.Register(service.NewGallerySource(database, dataDir))
 	sourceRegistry.Register(service.NewImmichSource(database, immichService))
 	sourceRegistry.Register(service.NewGooglePhotosSource(database, dataDir))
+	sourceRegistry.Register(service.NewAmbientSource(database, dataDir))
 	sourceRegistry.Register(service.NewSynologyPhotosSource(database, synologyService))
 	sourceRegistry.Register(service.NewTopicSourcePlugin(database, model.SourceUnsplash))
 	sourceRegistry.Register(service.NewTopicSourcePlugin(database, model.SourcePexels))
@@ -215,7 +219,7 @@ func main() {
 		Calendar:       calendarClient,
 		CalendarGoogle: googleCalendarClient,
 	})
-	deviceHandler := handler.NewDeviceHandler(deviceService, synologyService, immichService, database)
+	deviceHandler := handler.NewDeviceHandler(deviceService, synologyService, immichService, ambientService, database)
 
 	// Initialize Telegram Service
 	// Pass deviceService as Pusher
@@ -234,6 +238,8 @@ func main() {
 	googleHandler := handler.NewGoogleHandler(googleClient, googleCalendarClient, pickerService, database, dataDir)
 	sh := handler.NewSynologyHandler(synologyService)
 	imh := handler.NewImmichHandler(immichService)
+	ambientHandler := handler.NewAmbientHandler(ambientService)
+	ambientSync := handler.NewPhotoSyncHandler(ambientService)
 	// Generic photo-sync endpoints (sync / sync-status / clear / count) shared
 	// across sources.
 	synologySync := handler.NewPhotoSyncHandler(synologyService)
@@ -373,6 +379,17 @@ func main() {
 	protectedApi.GET("/immich/albums", imh.ListAlbums)
 	protectedApi.POST("/immich/sync-albums", imh.SetSyncAlbums)
 	protectedApi.GET("/immich/count", immichSync.Count)
+
+	// Google Photos Ambient (Protected). Pairing is per frame; sync/count/clear
+	// are server-wide and reuse PhotoSyncHandler.
+	protectedApi.GET("/devices/:id/ambient", ambientHandler.Status)
+	protectedApi.POST("/devices/:id/ambient/connect", ambientHandler.Connect)
+	protectedApi.PUT("/devices/:id/ambient", ambientHandler.Rename)
+	protectedApi.DELETE("/devices/:id/ambient", ambientHandler.Disconnect)
+	protectedApi.POST("/google-ambient/sync", ambientSync.Sync)
+	protectedApi.GET("/google-ambient/sync-status", ambientSync.SyncStatus)
+	protectedApi.POST("/google-ambient/clear", ambientSync.Clear)
+	protectedApi.GET("/google-ambient/count", ambientSync.Count)
 
 	// Search-topic sources (Unsplash / Pexels). Topics are listed via
 	// the generic GET /albums?source=<src>; sync/count/clear reuse PhotoSyncHandler.

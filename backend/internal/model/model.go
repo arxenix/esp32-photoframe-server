@@ -14,6 +14,7 @@ type Setting struct {
 
 const (
 	SourceGooglePhotos   = "google_photos"
+	SourceGoogleAmbient  = "google_ambient"
 	SourceSynologyPhotos = "synology_photos"
 	SourceGallery        = "gallery"
 	SourceURLProxy       = "url_proxy"
@@ -52,6 +53,42 @@ type GoogleAuth struct {
 	AccessToken  string    `json:"-"`
 	RefreshToken string    `json:"-"`
 	Expiry       time.Time `json:"expiry"`
+}
+
+// AmbientDevice is the Google Photos Ambient API device paired with one local
+// frame: its OAuth authorization (device-code flow, per frame because each
+// frame is authorized separately and may use a different Google account), the
+// remote device it created, and the state needed to know whether the user has
+// picked photos for it yet.
+type AmbientDevice struct {
+	ID       uint `gorm:"primaryKey" json:"id"`
+	DeviceID uint `gorm:"uniqueIndex" json:"device_id"`
+	// RequestID is the UUIDv4 passed as the device-code state requestId; reused
+	// across retries so devices.create is idempotent.
+	RequestID       string `json:"-"`
+	GoogleDeviceID  string `json:"google_device_id"`
+	DisplayName     string `json:"display_name"`
+	SettingsURI     string `json:"settings_uri"`
+	MediaSourcesSet bool   `json:"media_sources_set"`
+	// PollIntervalSeconds is the devices.get polling interval Google returns.
+	PollIntervalSeconds int        `json:"poll_interval_seconds"`
+	AccountEmail        string     `json:"account_email"`
+	AccessToken         string     `json:"-"`
+	RefreshToken        string     `json:"-"`
+	Expiry              *time.Time `json:"-"`
+	// ListCallsDate/ListCallsCount enforce the ambient quota of 240
+	// mediaItems.list requests per device per day (UTC).
+	ListCallsDate  string     `json:"-"`
+	ListCallsCount int        `json:"-"`
+	LastSyncAt     *time.Time `json:"last_sync_at"`
+	LastError      string     `json:"last_error"`
+	CreatedAt      time.Time  `json:"created_at"`
+	UpdatedAt      time.Time  `json:"updated_at"`
+}
+
+// Connected reports whether the frame has a usable ambient authorization.
+func (a *AmbientDevice) Connected() bool {
+	return a.GoogleDeviceID != "" && a.RefreshToken != ""
 }
 
 type GoogleCalendarAuth struct {

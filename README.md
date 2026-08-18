@@ -12,6 +12,7 @@ Mix and match photo sources per device:
 | --- | --- |
 | Gallery | Photos you upload from the dashboard, or send in via a [Telegram bot](https://core.telegram.org/bots). |
 | [Google Photos](https://photos.google.com/) | Pick albums & photos securely via the Picker API. |
+| Google Photos Ambient | Pair each frame as its own device in your Google Photos account, then choose what it shows from the Google Photos app. |
 | [Immich](https://immich.app/) | Self-hosted photo server — sync selected albums or the All / Favorites / Memories views. |
 | [Synology Photos](https://www.synology.com/en-us/dsm/feature/photos) | Your Synology NAS (DSM 7 Personal & Shared spaces). |
 | [Unsplash](https://unsplash.com/) · [Pexels](https://www.pexels.com/) | Free stock-photo search — add topics (e.g. `black and white`, `landscape`) and each becomes a synced album. |
@@ -136,6 +137,37 @@ Access the dashboard at `http://localhost:9607` (or your server IP, or via Home 
    - You can close the SSH tunnel (if used)
    - Access the server normally via Home Assistant ingress or `http://homeassistant.local:9607`
    - Re-authentication is only needed if you revoke access or want to add more photos
+
+### Google Photos Ambient Setup
+
+Ambient is separate from the Picker integration above: each frame becomes its own
+device in your Google Photos account, and you pick the albums/people it shows
+from the Google Photos app (no redirect URI needed — the frame is authorized with
+a code you type or scan).
+
+1. **Create OAuth Credentials** (must be its own client — the Picker web client
+   will not work):
+   - In [Google Cloud Console](https://console.cloud.google.com/), enable the
+     **Google Photos Ambient API**
+   - **Credentials** → **Create Credentials** → **OAuth 2.0 Client ID**
+   - Application type: **TVs and Limited Input devices**
+   - Save the Client ID and Client Secret
+
+2. **Configure the Server**:
+   - Go to **Settings** → **Google Ambient**
+   - Enter the ambient **Client ID** / **Client Secret** and click **Save Ambient
+     Credentials**
+
+3. **Connect a frame**:
+   - Click **Connect** on the frame you want to pair
+   - Scan the QR code (or open the shown URL) and enter the displayed code
+   - Once authorized, click **Choose photos in Google Photos** to select what
+     that frame shows
+   - Photos sync automatically; use **Sync Now** to refresh immediately
+
+> [!NOTE]
+> Do not swap the ambient Client ID afterwards: devices created under the old
+> client become unreachable and have to be re-paired.
 
 ### Synology Setup
 

@@ -302,6 +302,10 @@
             Open the <b>Pexels</b> tab under Data Sources below, add some topics
             and click <b>Sync Now</b> to import photos.
           </span>
+          <span v-else-if="galleryStore.source === 'google_ambient'">
+            Open the <b>Ambient</b> tab under Data Sources below, connect a
+            frame and pick photos for it in the Google Photos app.
+          </span>
         </p>
         <v-btn
           v-if="galleryStore.source === 'google_photos'"
@@ -391,6 +395,7 @@ const showAlbumChips = computed(
   () =>
     galleryStore.source === 'immich' ||
     galleryStore.source === 'synology_photos' ||
+    galleryStore.source === 'google_ambient' ||
     TOPIC_SOURCES.includes(galleryStore.source)
 );
 

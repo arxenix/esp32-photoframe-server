@@ -1,10 +1,12 @@
 package service
 
 import (
+	"errors"
 	"sync"
 
 	"github.com/aitjcize/esp32-photoframe-server/backend/internal/model"
 	"github.com/aitjcize/esp32-photoframe-server/backend/pkg/googlephotos"
+	"github.com/aitjcize/esp32-photoframe-server/backend/pkg/photosambient"
 	"gorm.io/gorm"
 )
 
@@ -95,6 +97,20 @@ func (s *SettingsService) GetGoogleConfig() (googlephotos.Config, error) {
 			"https://www.googleapis.com/auth/userinfo.profile",
 		},
 	}, nil
+}
+
+// GetAmbientConfig returns the Google Photos Ambient API credentials. They are
+// separate settings from google_client_id/secret because the Ambient API
+// requires an OAuth client of type "TVs and Limited Input devices", and because
+// resources created with one client ID are inaccessible to another.
+func (s *SettingsService) GetAmbientConfig() (photosambient.Config, error) {
+	clientID, _ := s.Get("google_ambient_client_id")
+	clientSecret, _ := s.Get("google_ambient_client_secret")
+
+	if clientID == "" || clientSecret == "" {
+		return photosambient.Config{}, errors.New("google ambient credentials not configured")
+	}
+	return photosambient.Config{ClientID: clientID, ClientSecret: clientSecret}, nil
 }
 
 func (s *SettingsService) GetGoogleCalendarConfig() (googlephotos.Config, error) {

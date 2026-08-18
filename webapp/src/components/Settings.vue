@@ -7,6 +7,7 @@
         <v-tab value="immich">Immich</v-tab>
         <v-tab value="synology_photos">Synology</v-tab>
         <v-tab value="google_photos">Google</v-tab>
+        <v-tab value="google_ambient">Google Ambient</v-tab>
         <v-tab value="unsplash">Unsplash</v-tab>
         <v-tab value="pexels">Pexels</v-tab>
         <v-tab value="url">URL Proxy</v-tab>
@@ -286,6 +287,13 @@
                   Enter Google API credentials above first.
                 </v-alert>
               </div>
+            </v-card-text>
+          </v-window-item>
+
+          <!-- Google Photos Ambient (per-frame device pairing) -->
+          <v-window-item value="google_ambient">
+            <v-card-text>
+              <AmbientManager :devices="availableDevices" />
             </v-card-text>
           </v-window-item>
 
@@ -2290,7 +2298,7 @@ import { useSettingsStore } from '../stores/settings';
 import { useSynologyStore } from '../stores/synology';
 import { useImmichStore } from '../stores/immich';
 import { useUnsplashStore, usePexelsStore } from '../stores/createSourceStore';
-import { useGalleryStore } from '../stores/gallery';
+import { useGalleryStore, type GallerySource } from '../stores/gallery';
 import { useSnackbar } from '../composables/useSnackbar';
 import {
   api,
@@ -2314,6 +2322,7 @@ import Gallery from './Gallery.vue';
 import ConfirmDialog from './ConfirmDialog.vue';
 import AlbumPicker from './AlbumPicker.vue';
 import TopicManager from './TopicManager.vue';
+import AmbientManager from './AmbientManager.vue';
 import SecurityTab from './SecurityTab.vue';
 import RotationSchedule from './RotationSchedule.vue';
 import { intervalToCron, cronToInterval, isValidCron } from '../utils/cron';
@@ -2378,6 +2387,7 @@ const sourceHasGallery = computed(() =>
     'immich',
     'synology_photos',
     'google_photos',
+    'google_ambient',
     'unsplash',
     'pexels',
   ].includes(sourceTab.value)
@@ -2391,6 +2401,7 @@ const sourceOptions = [
   { title: 'Gallery', value: 'gallery' },
   { title: 'Immich', value: 'immich' },
   { title: 'Google Photos', value: 'google_photos' },
+  { title: 'Google Photos Ambient', value: 'google_ambient' },
   { title: 'Synology Photos', value: 'synology_photos' },
   { title: 'Unsplash', value: 'unsplash' },
   { title: 'Pexels', value: 'pexels' },
@@ -3033,9 +3044,7 @@ const getDeviceName = (id: number) => {
 watch(sourceTab, (val) => {
   // Drive the top gallery for gallery-capable sources.
   if (sourceHasGallery.value) {
-    galleryStore.setSource(
-      val as 'gallery' | 'immich' | 'synology_photos' | 'google_photos'
-    );
+    galleryStore.setSource(val as GallerySource);
   }
   // Lazy-load per-source data the first time its tab is opened.
   if (val === 'url') {
@@ -3490,6 +3499,7 @@ const SOURCE_TABS = [
   'immich',
   'synology_photos',
   'google_photos',
+  'google_ambient',
   'unsplash',
   'pexels',
   'url',

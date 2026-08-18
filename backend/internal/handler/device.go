@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -19,14 +21,16 @@ type DeviceHandler struct {
 	deviceService   *service.DeviceService
 	synologyService *service.SynologyService
 	immichService   *service.ImmichService
+	ambientService  *service.AmbientService
 	db              *gorm.DB
 }
 
-func NewDeviceHandler(deviceService *service.DeviceService, synologyService *service.SynologyService, immichService *service.ImmichService, db *gorm.DB) *DeviceHandler {
+func NewDeviceHandler(deviceService *service.DeviceService, synologyService *service.SynologyService, immichService *service.ImmichService, ambientService *service.AmbientService, db *gorm.DB) *DeviceHandler {
 	return &DeviceHandler{
 		deviceService:   deviceService,
 		synologyService: synologyService,
 		immichService:   immichService,
+		ambientService:  ambientService,
 		db:              db,
 	}
 }
@@ -148,6 +152,11 @@ func (h *DeviceHandler) RefreshDevice(c echo.Context) error {
 // DELETE /api/devices/:id
 func (h *DeviceHandler) DeleteDevice(c echo.Context) error {
 	id, _ := strconv.Atoi(c.Param("id"))
+	// Deleting the frame's row cascades locally, but its ambient device also
+	// has to be removed from the user's Google Photos account (100 per user).
+	if err := h.ambientService.Disconnect(uint(id)); err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Printf("[ambient] frame %d: disconnect on device delete failed: %v", id, err)
+	}
 	if err := h.deviceService.DeleteDevice(uint(id)); err != nil {
 		return respondError(c, http.StatusInternalServerError, err.Error())
 	}

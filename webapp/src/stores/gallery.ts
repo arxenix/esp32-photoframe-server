@@ -2,6 +2,16 @@ import { defineStore } from 'pinia';
 import { api } from '../api';
 import { useSettingsStore } from './settings';
 
+export type GallerySource =
+  | 'google_photos'
+  | 'google_ambient'
+  | 'synology_photos'
+  | 'immich'
+  | 'unsplash'
+  | 'pexels'
+  | 'gallery'
+  | 'url_proxy';
+
 export const useGalleryStore = defineStore('gallery', {
   state: () => ({
     photos: [] as any[],
@@ -11,14 +21,7 @@ export const useGalleryStore = defineStore('gallery', {
     limit: 48,
     importMessage: '',
     pickerTimer: null as number | null,
-    source: 'gallery' as
-      | 'google_photos'
-      | 'synology_photos'
-      | 'immich'
-      | 'unsplash'
-      | 'pexels'
-      | 'gallery'
-      | 'url_proxy',
+    source: 'gallery' as GallerySource,
     album: null as number | null,
     // Bumped to ask the Gallery view to refetch photos + album chips
     // (e.g. after a Delete All from the source config tab).
@@ -28,16 +31,7 @@ export const useGalleryStore = defineStore('gallery', {
     totalPages: (state) => Math.ceil(state.totalPhotos / state.limit),
   },
   actions: {
-    setSource(
-      source:
-        | 'google_photos'
-        | 'synology_photos'
-        | 'immich'
-        | 'unsplash'
-        | 'pexels'
-        | 'gallery'
-        | 'url_proxy'
-    ) {
+    setSource(source: GallerySource) {
       this.source = source;
       this.page = 1;
       this.album = null;
